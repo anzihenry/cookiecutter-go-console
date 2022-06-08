@@ -1,23 +1,22 @@
 {
     "project_name" : "",
-    "project_description" : "",
     "version" : "0.0.1",
-    "author" : "Henry Tse",
-    "author_email" : "anzihenry@gmail.com",
+    "author" : "",
+    "author_email" : "",
 
-    "open_source" : "y",
-    "open_source_license" : "MIT",
-    
-    "enable_git" : "y",
-    "enable_docker" : "y",
-    "enable_ci" : [
-        "travis",
-        "drone",
-        "none"
+    "open_source" : "yes",
+    "license" : [
+        "MIT",
+        "BSD-3-Clause",
+        "Apache-2.0",
+        "GPL-2.0",
+        "LGPL-2.1",
+        "AGPL-3.0"
     ],
 
-    "infrastructure_dep" : [
-        "github.com/sirupsen/logrus",
-        "github.com/spf13/cobra"
-    ]
+    "enable_sphinx_for_docs" : "yes",
+    
+    "enable_git" : "yes",
+    "enable_docker" : "yes",
+    "enable_ci" : "yes"
 }

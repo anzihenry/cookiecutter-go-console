@@ -64,18 +64,22 @@ def setup_go():
         author_email = input('Please input author email: ')
         
     # cobra-cli makes command line biz easy.
-    go_cobra_cli = Popen(['go', 'install', 'github.com/spf13/cobra-cli@latest'])
-    go_cobra_cli.wait()
+    go_bin_path = os.path.join(os.environ['GOPATH'], 'bin')
+    cobra_path = os.path.join(go_bin_path, 'cobra-cli')
+    if not os.path.exists(cobra_path):
+        go_cobra_cli = Popen(['go', 'install', 'github.com/spf13/cobra-cli@latest'])
+        go_cobra_cli.wait()
     # init go module
     go_mod = Popen(['go', 'mod', 'init', '{{cookiecutter.project_name}}'])
     go_mod.wait()
     # create .cobra.yaml
     dot_cobra_yaml = """
-    author: %s %s
-    year: %s
+    author: {} <{}>
+    year: {}
     useViper: true
     """
-    create_file(".cobra.yaml", dot_cobra_yaml % {'author': author, 'author_email': author_email, 'year': year})
+    cobra_yaml_path = os.path.join(os.environ['HOME'], '.cobra.yaml')
+    create_file(cobra_yaml_path, dot_cobra_yaml.format(author, author_email, year))
     # create cobra-base barebone
     go_cobra_init = Popen(['cobra-cli', 'init'])
     go_cobra_init.wait()
@@ -103,18 +107,19 @@ def setup_git():
         author = input('Please input author name: ')
         author_email = input('Please input author email: ')
         
-        create_file(".gitignore", get_dot_gitignore('go'))
+    create_file(".gitignore", get_dot_gitignore('go'))
 
-        GIT_COMMAND = [
-            ['git', 'init'],
-            ['git', 'config', 'user.name', author],
-            ['git', 'config', 'user.email', author_email],
-            ['git', 'add', '.'],
-            ['git', 'commit', '-m', 'initial commit']
-        ]
-        for command in GIT_COMMAND:
-            git = Popen(command)
-            git.wait()
+    GIT_COMMAND = [
+        ['git', 'init'],
+        ['git', 'config', 'user.name', author],
+        ['git', 'config', 'user.email', author_email],
+        ['git', 'branch', '-m', 'main'],
+        ['git', 'add', '.'],
+        ['git', 'commit', '-m', 'initial commit']
+    ]
+    for command in GIT_COMMAND:
+        git = Popen(command)
+        git.wait()
         
     
 # main

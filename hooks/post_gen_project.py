@@ -7,11 +7,11 @@ Does the following:
 5. checks git, make sure athor name and email are set. setup .gitignore, do initial commit.
 """
 from datetime import datetime
-from email import header
 import os
 from subprocess import Popen
 import requests
 
+app_version = '{{cookiecutter.version}}'
 is_open_source = '{{cookiecutter.open_source}}'
 license = '{{cookiecutter.license}}'
 author = '{{cookiecutter.author}}'
@@ -19,6 +19,7 @@ author_email = '{{cookiecutter.author_email}}'
 enable_ci = '{{cookiecutter.enable_ci}}'
 enable_docker = '{{cookiecutter.enable_docker}}'
 enable_git = '{{cookiecutter.enable_git}}'
+enable_sphinx_for_docs = '{{cookiecutter.enable_sphinx_for_docs}}'
 year = datetime.now().year
 
 def create_file(fileName, content):
@@ -43,27 +44,61 @@ def get_dot_gitignore(language_or_ide):
         return None
 
 def get_travis():
-    return ""
+    return """
+    language: go
+    os: 
+    - linux
+    - osx
+    go:
+    - 1.18.x
+    notifications:
+        email:true
+    """
 
 def get_drone():
-    return ""
+    return """
+    language: go
+    """
 
 def get_docker_file():
-    return ""
+    return """
+    ##
+    ## Build
+    ##
+    FROM golang:1.18-alpine as builder
+    RUN apk add --no-cache git make gcc g++
+    WORKDIR /go/src/{{cookiecutter.project_name}}
+    COPY . .
+    RUN make build
+
+    ##
+    ## Deploy
+    ##
+    FROM scratch
+    COPY --from=builder /go/src/{{cookiecutter.project_name}}/bin/{{cookiecutter.project_name}} /usr/local/bin/{{cookiecutter.project_name}}
+    ENTRYPOINT ["/usr/local/bin/{{cookiecutter.project_name}}"]
+    """
+
+def setup_app_version():
+    with open('VERSION', 'w') as f:
+        f.write(app_version)
 
 def setup_open_source():
     create_file("LICENSE", get_license(license))
 
+def setup_docs():
+    pass
+
 # setup go stuffs
 def setup_go():
     global author, author_email
-
+    # make sure author and email are set
     if author == '' or author_email == '':
         print('WARNING: author name and email are required!')
         author = input('Please input author name: ')
         author_email = input('Please input author email: ')
         
-    # cobra-cli makes command line biz easy.
+    # download cobra-cli, cobra-cli makes command line biz easy.
     go_bin_path = os.path.join(os.environ['GOPATH'], 'bin')
     cobra_path = os.path.join(go_bin_path, 'cobra-cli')
     if not os.path.exists(cobra_path):
@@ -80,7 +115,7 @@ def setup_go():
     """
     cobra_yaml_path = os.path.join(os.environ['HOME'], '.cobra.yaml')
     create_file(cobra_yaml_path, dot_cobra_yaml.format(author, author_email, year))
-    # create cobra-base barebone
+    # create cobra-base barebone files
     go_cobra_init = Popen(['cobra-cli', 'init'])
     go_cobra_init.wait()
 
@@ -121,15 +156,23 @@ def setup_git():
         git = Popen(command)
         git.wait()
         
-    
+
+def setup_project():
+    setup_app_version()
+    if is_open_source == 'yes':
+        setup_open_source()
+    setup_go()
+    if enable_docker == 'yes':
+        setup_docker()
+    if enable_ci == 'yes':
+        setup_ci()
+    if enable_sphinx_for_docs == 'yes':
+        setup_docs()
+    if enable_git == 'yes':
+        setup_git()
+
+
 # main
-if is_open_source == 'yes':
-    setup_open_source()
-setup_go()
-if enable_docker == 'yes':
-    setup_docker()
-if enable_ci == 'yes':
-    setup_ci()
-if enable_git == 'yes':
-    setup_git()
+setup_project()
+
 

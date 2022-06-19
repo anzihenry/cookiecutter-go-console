@@ -24,7 +24,13 @@ year = datetime.now().year
 
 def create_file(fileName, content):
     with open(fileName, 'w') as f:
-        f.write(content)  
+        f.write(content)
+
+def get_makefile():
+    return """
+    all:
+        go build -o {{cookiecutter.project_name}}
+    """  
 
 def get_license(license_type):
     url = 'https://api.github.com/licenses/%s' % license_type.lower()
@@ -82,6 +88,9 @@ def get_docker_file():
 def setup_app_version():
     with open('VERSION', 'w') as f:
         f.write(app_version)
+
+def setup_makefile():
+    create_file("Makefile", get_makefile())
 
 def setup_open_source():
     create_file("LICENSE", get_license(license))
@@ -159,6 +168,7 @@ def setup_git():
 
 def setup_project():
     setup_app_version()
+    setup_makefile()
     if is_open_source == 'yes':
         setup_open_source()
     setup_go()
